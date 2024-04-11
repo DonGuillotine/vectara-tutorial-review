@@ -137,3 +137,67 @@ def fetch_url_content(url):
     except requests.RequestException as e:
         logging.error(f"Error fetching {url}: {e}")
         return ""
+    
+
+if user_prompt and st.session_state["vectara_api_key"]:
+    conversation_id = get_latest_conversation_id(
+        st.session_state["vectara_api_key"], vectara_customer_id
+    )
+    response = requests.post(
+        "https://api.vectara.io/v1/query",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "customer-id": vectara_customer_id,
+            "x-api-key": st.session_state["vectara_api_key"],
+        },
+        data=json.dumps(
+            {
+                "query": [
+                    {
+                        "query": user_prompt,
+                        "start": 0,
+                        "numResults": 3,
+                        "contextConfig": {
+                            "sentences_before": 3,
+                            "sentences_after": 3,
+                            "start_tag": "<response>",
+                            "end_tag": "</response>",
+                        },
+                        "corpusKey": [{"corpus_id": st.session_state["corpus_number"]}],
+                        "summary": [
+                            {"max_summarized_results": 3, "response_lang": "en"}
+                        ],
+                        "chat": {"store": True, "conversationId": conversation_id},
+                    }
+                ]
+            }
+        ),
+    )
+    query_response = response.json()
+
+    if query_response["responseSet"] and query_response["responseSet"][0]["response"]:
+        score = query_response["responseSet"][0]["response"][0]["score"]
+        first_response = query_response["responseSet"][0]["summary"][0]["text"]
+
+        if (
+            score < 0.65
+            or "The returned results did not contain sufficient information"
+            in first_response
+        ):
+            st.write("Conversation paused. Updating corpus...")
+            if st.session_state["corpus_number"] is not None:
+                upload_response = research_and_update_corpus(
+                    user_prompt,
+                    st.session_state["serper_api_key"],
+                    st.session_state["vectara_api_key"],
+                    vectara_customer_id,
+                    st.session_state["corpus_number"],
+                )
+                st.write(f"Corpus update response: {upload_response}")
+            else:
+                st.error("Corpus number is not set. Cannot update the corpus.")
+
+        st.session_state.messages.append(
+            {"role": "assistant", "content": first_response}
+        )
