@@ -72,3 +72,23 @@ with st.form("chat_input", clear_on_submit=True):
 
     if st.form_submit_button("Send"):
         st.session_state.messages.append({"role": "user", "content": user_prompt})
+
+
+def get_latest_conversation_id(api_key, customer_id):
+    """Retrieves the latest conversation ID from Vectara."""
+    response = requests.post(
+        "https://api.vectara.io/v1/list-conversations",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "customer-id": customer_id,
+            "x-api-key": api_key,
+        },
+        data=json.dumps({"numResults": 0, "pageKey": ""}),
+    )
+    response_data = response.json()
+    return (
+        response_data["conversation"][-1]["conversationId"]
+        if response_data and "conversation" in response_data
+        else None
+    )
