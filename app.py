@@ -126,3 +126,14 @@ def research_and_update_corpus(
         time.sleep(1)
 
         return upload_response
+    
+
+def fetch_url_content(url):
+    """Fetches content from a URL."""
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return response.text
+    except requests.RequestException as e:
+        logging.error(f"Error fetching {url}: {e}")
+        return ""
