@@ -31,3 +31,35 @@ if st.button("Start Using Now!"):
     st.write(
         "Great! Let's dive into the world of conversational AI with Vectara Chat. 🎉"
     )
+
+if "corpus_number" not in st.session_state:
+    st.session_state["corpus_number"] = None
+
+with st.sidebar:
+    st.session_state["vectara_api_key"] = st.text_input("Vectara API Key")
+    st.session_state["serper_api_key"]= st.text_input("Serper API Key (for research)")
+    vectara_customer_id = st.text_input("Vectara Customer ID")
+    corpus_name = st.text_input("Corpus Name (optional)")
+    corpus_description = st.text_input("Corpus Description (optional)")
+    file = st.file_uploader("Upload a file (optional)", type=["text", "pdf"])
+
+    if st.button("Submit") and file:
+        corpus_number, _ = create_corpus(
+            st.session_state["vectara_api_key"],
+            vectara_customer_id,
+            corpus_name,
+            corpus_description,
+        )
+
+        if corpus_number is not None:
+            st.session_state["corpus_number"] = corpus_number
+            file_path = save_to_dir(file)
+            upload_file(
+                st.session_state["vectara_api_key"],
+                vectara_customer_id,
+                corpus_number,
+                file_path,
+            )
+            st.success("File uploaded successfully!")
+        else:
+            st.error("Failed to create corpus. Please check your inputs.")
