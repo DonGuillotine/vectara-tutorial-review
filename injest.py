@@ -48,3 +48,18 @@ def save_to_dir(uploaded_file):
             f.write(uploaded_file.getbuffer())
 
         return file_path
+    
+
+def upload_file(api_key, customer_id, corpus_number, file_path):
+    url = f"https://api.vectara.io/v1/upload?c={customer_id}&o={corpus_number}"
+
+    with open(file_path, "rb") as f:
+        files = {
+            "file": (os.path.basename(file_path), f),
+        }
+
+        headers = {"Accept": "application/json", "x-api-key": api_key}
+
+        response = requests.post(url, headers=headers, files=files)
+
+    return response.text
