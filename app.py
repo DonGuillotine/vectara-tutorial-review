@@ -92,3 +92,37 @@ def get_latest_conversation_id(api_key, customer_id):
         if response_data and "conversation" in response_data
         else None
     )
+
+
+def research_and_update_corpus(
+    query, serper_api_key, vectara_api_key, vectara_customer_id, corpus_number
+):
+    """Conducts research and updates the corpus based on the query."""
+    with st.status("Updating corpus...") as status:
+        status.write("Sending request to Serper.dev API...")
+        response = requests.post(
+            "https://google.serper.dev/search",
+            headers={"X-API-KEY": serper_api_key, "Content-Type": "application/json"},
+            data=json.dumps({"q": query}),
+        )
+
+        search_results = json.loads(response.text)
+        top_links = [result["link"] for result in search_results["organic"][:5]]
+
+        consolidated_content = "\n".join(
+            [fetch_url_content(link) for link in top_links]
+        )
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_path = os.path.join("", f"serper_response_{timestamp}.txt")
+
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(consolidated_content)
+
+        status.write("Uploading consolidated file to update corpus...")
+        upload_response = upload_file(
+            vectara_api_key, vectara_customer_id, corpus_number, file_path
+        )
+        status.update(label="Corpus updated successfully!", state="complete")
+        time.sleep(1)
+
+        return upload_response
