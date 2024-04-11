@@ -36,3 +36,15 @@ def create_corpus(api_key , customer_id ,corpus_name,corpus_description):
     success_message = data_dict["status"]["statusDetail"]
 
     return corpus_number, success_message
+
+
+def save_to_dir(uploaded_file):
+    if uploaded_file is not None:
+        temp_dir = "temp"
+        os.makedirs(temp_dir, exist_ok=True)
+        file_path = os.path.join(temp_dir, uploaded_file.name)
+
+        with open(file_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+
+        return file_path
