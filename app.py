@@ -63,3 +63,12 @@ with st.sidebar:
             st.success("File uploaded successfully!")
         else:
             st.error("Failed to create corpus. Please check your inputs.")
+
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
+
+with st.form("chat_input", clear_on_submit=True):
+    user_prompt = st.text_input("Your message:", label_visibility="collapsed")
+
+    if st.form_submit_button("Send"):
+        st.session_state.messages.append({"role": "user", "content": user_prompt})
