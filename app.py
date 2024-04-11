@@ -201,3 +201,7 @@ if user_prompt and st.session_state["vectara_api_key"]:
         st.session_state.messages.append(
             {"role": "assistant", "content": first_response}
         )
+
+
+for idx, msg in enumerate(st.session_state.messages):
+    message(msg["content"], is_user=msg["role"] == "user", key=f"chat_message_{idx}")
